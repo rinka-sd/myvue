@@ -35,10 +35,13 @@ export default {
 
       if (status === 200) {
         //login success
+        //store token
+        localStorage.setItem('token',data.token)
         //1.jump to home
         this.$router.push({ name: "home" });
         //2.success notice
         this.$message.success(msg);
+        
       } else {
         this.$message.warning(msg);
       }
