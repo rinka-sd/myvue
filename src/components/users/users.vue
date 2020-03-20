@@ -16,15 +16,41 @@
       </el-col>
     </el-row>
 
-    <el-table :data="tableData" style="width: 100%">
+    <el-table :data="userList" style="width: 100%">
       <el-table-column type="index" label="#" width="180"></el-table-column>
-      <el-table-column prop="name" label="姓名" width="180"></el-table-column>
-      <el-table-column prop="address" label="邮箱"></el-table-column>
-      <el-table-column prop="address" label="电话"></el-table-column>
-      <el-table-column prop="address" label="创建时间"></el-table-column>
-      <el-table-column prop="address" label="用户状态"></el-table-column>
-      <el-table-column prop="address" label="操作"></el-table-column>
+      <el-table-column prop="username" label="姓名" width="180"></el-table-column>
+      <el-table-column prop="email" label="邮箱"></el-table-column>
+      <el-table-column prop="mobile" label="电话"></el-table-column>
+
+      <el-table-column label="创建时间">
+        <template slot-scope="scope">{{scope.row.create_time | fmtdate}}</template>
+      </el-table-column>
+
+      <el-table-column label="用户状态">
+        <template slot-scope="scope">
+          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="address" label="操作">
+        <template slot-scope="scope">
+          <el-button size="mini" plain type="primary" icon="el-icon-edit" circle></el-button>
+          <el-button size="mini" plain type="danger" icon="el-icon-delete" circle></el-button>
+          <el-button size="mini" plain type="success" icon="el-icon-check" circle></el-button>
+        </template>
+      </el-table-column>
     </el-table>
+
+    <!-- 分页 -->
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="pagenum"
+      :page-sizes="[ 2, 4, 8,16]"
+      :page-size="2"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+    ></el-pagination>
   </el-card>
 </template>
 
@@ -32,33 +58,53 @@
 export default {
   data() {
     return {
-      query: '',
-      pagenum:1,
-      pagesize:2,
-      tableData: [
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1517 弄"
-        }
-      ]
+      query: "",
+      pagenum: 1,
+      pagesize: 2,
+      userList: [],
+      total: -1
     };
   },
   created() {
     this.getUserList();
   },
   methods: {
+    //   分页-begin
+    handleSizeChange(val) {
+      console.log(`每页 ${val} 条`);
+      this.pagesize = val
+      this.getUserList()
+    },
+    handleCurrentChange(val) {
+      console.log(`当前页: ${val}`);
+      this.pagenum = val
+      this.getUserList()
+    },
+    // 分页-end
+
     async getUserList() {
-      const AUTH_TOKEN = localStorage.getItem('token')
-      this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
-      const str='users?query='+this.query+'&pagenum='+this.pagenum+'&pagesize='+this.pagesize
-      const res = await this.$http.get(str)
-      console.log(res)
+      const AUTH_TOKEN = localStorage.getItem("token");
+      this.$http.defaults.headers.common["Authorization"] = AUTH_TOKEN;
+      const str =
+        "users?query=" +
+        this.query +
+        "&pagenum=" +
+        this.pagenum +
+        "&pagesize=" +
+        this.pagesize;
+      const res = await this.$http.get(str);
+      console.log(res);
+      const {
+        meta: { status, msg },
+        data: { users, total }
+      } = res.data;
+      if (status === 200) {
+        this.userList = users;
+        this.total = total;
+        this.$message.success(msg);
+      } else {
+        this.$message.warning(msg);
+      }
     }
   }
 };
